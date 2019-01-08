@@ -1,5 +1,5 @@
-# [Vue Cadastre (IGN)](http://ccpfa.github.io/Vue_Cadastre_IGN)
-Une simple page en Leaflet pour afficher le cadastre français à partir des tuiles du Géoportail de l'IGN.
+# [Vue carte](https://pgc22.github.io/UPM/#9/43.8048/6.2787)
+Une simple page en Leaflet pour afficher la région PACA à partir des tuiles du Géoportail de l'IGN.
 On peut importer des fichiers GeoJson.
 
 [Essayer](http://ccpfa.github.io/Vue_Cadastre_IGN)
