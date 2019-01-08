@@ -2,7 +2,7 @@
 Une simple page en Leaflet pour afficher la région PACA à partir des tuiles du Géoportail de l'IGN.
 On peut importer des fichiers GeoJson.
 
-[Essayer](http://ccpfa.github.io/Vue_Cadastre_IGN)
+[Essayer](https://pgc22.github.io/UPM/#9/43.8048/6.2787)
 
 utilise:
 - http://makinacorpus.github.io/Leaflet.FileLayer/
