@@ -97,7 +97,7 @@
 		background:  #f2f3f4  ;
 		font-size : 13px;
 		width:450px;
-		height: 250px;
+		height: 300px;
 		border: 1px solid #CCC;
 		z-index: 10;
 	}
@@ -447,7 +447,8 @@
 				var winW = window.innerWidth;
 				var winH = window.innerHeight;
 				var dialogbox = document.getElementById('dialogbox');
-				var obs = document.getElementById('obs');
+				var obsSz = document.getElementById('obs');
+				var nameSz= document.getElementById('name');
 				
 				dialogoverlay.style.display = 'block';
 				dialogbox.style.display = 'block';
@@ -457,9 +458,11 @@
 				dialogbox.style.left = "20px";
 				dialogbox.style.top = "100px";
 				dialogbox.style.display = "block";
-				dialogbox.style.width = ((winW/2)*1.5)+"px";
+				dialogbox.style.width = (winW*0.75)+"px";
 				
-				obs.style.width = (dialogbox.style.width/1.5)+"px";
+				var wdth = dialogbox.style.width.split("px");			
+				nameSz.size = (wdth[0]/10);
+				obsSz.size = (wdth[0]/10);
 			}
 		}
 		var Prompt = new CustomPrompt(); 
