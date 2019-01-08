@@ -447,6 +447,7 @@
 				var winW = window.innerWidth;
 				var winH = window.innerHeight;
 				var dialogbox = document.getElementById('dialogbox');
+				var obs = document.getElementById('obs');
 				
 				dialogoverlay.style.display = 'block';
 				dialogbox.style.display = 'block';
@@ -457,6 +458,8 @@
 				dialogbox.style.top = "100px";
 				dialogbox.style.display = "block";
 				dialogbox.style.width = ((winW/2)*1.5)+"px";
+				
+				obs.style.width = (dialogbox.style.width/1.5)+"px";
 			}
 		}
 		var Prompt = new CustomPrompt(); 
