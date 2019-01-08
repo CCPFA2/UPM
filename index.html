@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no", charset="UTF-8" />
+    <meta http-equiv="x-ua-compatible" content="IE=edge" >
+	<title>UPM</title>
+    <!--<script src="https://use.fontawesome.com/9193c58103.js"></script>-->
+    <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' rel='stylesheet' />
+    <link href='https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" />
+	<script src="./src/leaflet.js"></script>
+	<script src="./src/Leaflet.VectorGrid.bundled.js"></script>
+    <script src="./src/js/leaflet.filelayer.js"></script>
+    <script src="./src/js/togeojson.js"></script>
+    <script src="./src/js/leaflet.edgebuffer.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/pouchdb/6.1.1/pouchdb.min.js"></script>-->
+    <!--<script src="https://unpkg.com/leaflet.tilelayer.pouchdbcached@latest/L.TileLayer.PouchDBCached.js"></script>-->
+    <!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">-->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/leaflet.locatecontrol/0.60.0/L.Control.Locate.min.css" />
+    <script src="https://cdn.jsdelivr.net/leaflet.locatecontrol/0.60.0/L.Control.Locate.min.js"></script>
+    <script src="./src/js/l.control.geosearch.js"></script>
+    <script src="./src/js/l.geosearch.provider.openstreetmap.js"></script>
+    <link rel="stylesheet" href="./src/css/l.geosearch.css" />
+    <link rel="stylesheet" href="./src/leaflet-search.css" />
+    <script src="./src/leaflet-searchc.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-hash/0.2.1/leaflet-hash.min.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet.pm@0.25/dist/leaflet.pm.css" />
+	<script src="https://unpkg.com/leaflet.pm@0.25/dist/leaflet.pm.min.js"></script>
+	<link rel="stylesheet" href="./src/easy-button.css" />
+	<script src="./src/easy-button.js"></script>
+	
+    <style>
+    #map {
+        position: fixed;
+        top:0;
+        left: 0;
+        right: 0;
+        bottom:0;
+    }
+    .info {
+		text-align: left;
+		line-height: 14px;
+		color: #555;
+		float: left;
+		margin-right: 4px;
+		padding: 5px 20px;
+		font: 12px/14px Arial, Helvetica, sans-serif;
+		background: blue;
+		background: rgba(255,255,255,0.7);
+		box-shadow: 0 0 15px rgba(0,0,0,0.3);
+		border-radius: 5px;
+	}
+	.info h4 {
+		margin: 0 0 5px;
+		color: #777;
+	}
+
+	.legend {
+		text-align: left;
+		line-height: 14px;
+		color: #555;
+	}
+	.legend i {
+		width: 14px;
+		height: 14px;
+		float: left;
+		margin-right: 4px;
+		opacity: 0.7;
+		box-shadow: 0 0 15px rgba(0,0,0,0.3);
+		border-radius: 5px;
+	}
+	.marker{
+		text-align: center;
+		position: absolute;
+		color: gray;                    // icon color
+		font:16px, Arial, sans-serif;
+		font-weight:bold;
+		filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+	}
+		
+	#dialogoverlay{
+	display: none;
+	opacity: .4;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	background: #FFF;
+	width: 100%;
+	z-index: 10;
+	}
+	#dialogbox{
+		display: none;
+		padding:15px;
+		position: absolute;
+		background:  #f2f3f4  ;
+		font-size : 13px;
+		width:450px;
+		height: 250px;
+		border: 1px solid #CCC;
+		z-index: 10;
+	}
+
+	#dialogbox > div > #name{ background: #FFF; padding:5px; color:#111; border-radius:3px; }
+	#dialogbox > div > #obs{ background: #FFF; padding:5px; color:#111; border-radius:3px; }
+	#dialogbox > button > {text-align: center;	cursor: pointer;}
+	
+	
+    </style>
+</head>
+	<body>
+		<div id="dialogoverlay"></div>
+		<div id="dialogbox">
+		  <div>
+			<span> Saisir le nom ou la zone du prélèvement : </span><br/>
+			<input type="text" id="name"  size="50" onchange="changemt()" ><br/><br/>
+			<span> Le prélèvement est-il autorisé ?<br></span>
+			<select id="auto">
+			  <option value="oui">Oui
+			  <option value="non">Non
+			  <option value="autre">Autre
+			</select><br/>
+			<br>
+			<span> Ajouter un commentaire : </span><br/>
+			<input type="text" id="obs"  size="50" onchange="changemt()"><br/><br/>
+			<button type="button" onclick="Submit()">Valider</button>
+			<button type="button" onclick="Close()">Annuler</button>
+		  </div>
+		  <br>
+		</div>
+	</body>
+	
+	<body>
+		<div id="map"></div>
+		<div id='delete'></div>
+		<a href='#' id='export'></a>	
+			
+		<script type="text/javascript">
+	
+		var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 21, maxNativeZoom: 19,
+			edgeBufferTiles: 2,
+			//useCache: false,
+			//crossOrigin: false,
+			detectRetina: false,
+			attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'});
+			
+		var osm_light  = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',opacity: 1,
+			maxZoom: 21, maxNativeZoom: 19, //useCache: true,
+			edgeBufferTiles: 2
+			//detectRetina: true,										  
+			});
+			
+		var osm_dark  = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',opacity: 1,
+			maxZoom: 21, maxNativeZoom: 19, //useCache: true,
+			edgeBufferTiles: 2
+		});
+
+		var Topo =  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {maxZoom: 18, maxNativeZoom: 17,
+			//edgeBufferTiles: 2,
+			//useCache: true,
+			detectRetina: true,
+			attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'});
+		
+		var carthage = L.tileLayer('https://a.tile.openstreetmap.fr/route500hydro/{z}/{x}/{y}.png', {maxZoom: 19,
+			//useCache: true,
+			//crossOrigin: false,
+			//edgeBufferTiles: 2,
+			detectRetina: false, zIndex: 8, attribution: '&copy; IGN, BD Carthage' });
+			
+		var baseMaps = {
+			"OSM": osm,
+			"OSM Clair": osm_light,
+			"OSM Sombre": osm_dark,
+			"Topo" : Topo
+		};
+
+		var overlays = {
+			"Rivières": carthage
+		};
+
+		var map = L.map('map', {
+			center: [46.5,2.34],
+			zoom: 9,
+			center: [43.8048,6.2787],
+			layers: [osm_light]
+		});
+		
+		
+		var hash = new L.Hash(map);
+		L.control.layers(baseMaps,overlays).addTo(map);
+
+
+		var style = {color:'red', opacity: 1.0, fillOpacity: 0.1, weight: 2, clickable: true};
+		var geojsonMarkerOptions = {
+			  radius: 8,
+			  fillColor: "#ff7800",
+			  color: "#000",
+			  weight: 1,
+			  opacity: 1,
+			  fillOpacity: 0.8
+		};
+
+		var w = window,
+			d = document,
+			e = d.documentElement,
+			g = d.getElementsByTagName('body')[0],
+			x = w.innerWidth || e.clientWidth || g.clientWidth,
+			y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+		
+		popupwidth=Math.round(x/4)
+		popupheight=Math.round(y/3)
+		
+		var customOptions ={
+			'maxWidth': popupwidth.toString(),
+			'maxHeight': popupheight.toString(),
+			'className' : 'custom'
+		}
+		
+		var customOptionsF ={
+			'maxWidth': (popupwidth*1.5).toString(),
+			'maxHeight': popupheight.toString(),
+			'className' : 'custom'
+		}
+		
+		L.Control.FileLayerLoad.LABEL = '<i class="fa fa-folder-open"></i>';// '⌘';
+		var control = new L.Control.fileLayerLoad({
+			fileSizeLimit: 256000,
+		}).addTo(map);
+		
+		control.loader.on('data:loaded', function (e) {
+		
+		data=JSON.parse(e.result);
+		
+		
+		//-------VG----------------
+		var vg_prisesEau = L.vectorGrid.slicer( data, {
+			rendererFactory: L.canvas.tile,
+			attribution: 'CC-PFA',
+			maxZoom: 22,
+			zIndex:150,			// max zoom to preserve detail on
+			tolerance: 5,		// simplification tolerance (higher means simpler)
+			extent: 1024, 		// tile extent (both width and height)
+			buffer: 64,   		// tile buffer on each side
+			debug: 0,      		// logging level (0 to disable, 1 or 2)
+			vectorTileLayerStyles: {
+			sliced: function(properties, zoom) {
+				var auto = properties["Autorisation"];
+				return {
+					fillColor: 	(auto === "oui"  )? 'green':
+								(auto === "non"  )? 'red' : 
+								(auto === "autre"  )? 'orange':'orange',
+					fillOpacity:0.7,
+					stroke: true,
+					fill: true,
+					color:  	(auto === "oui"  )? 'green':
+								(auto === "non"  )? 'red'  : 
+								(auto === "autre"  )? 'orange':'orange',
+							
+					opacity: 1,
+					weight: 1,
+				}
+			}},
+			interactive: true,
+			// getFeatureId: function(auto) {
+				// return auto.properties.Nom;
+			// }
+		})
+		.on('mouseover', function(e) {
+			var properties = e.layer.properties;
+			info = 	"<b>Prélèvement d'eau : "+properties.Nom+'</b><br />'+'Autorisation : '+properties.Autorisation+'<br />Observations : '+properties.Commentaire	
+			L.popup(customOptions)
+				.setLatLng(e.latlng)
+				.setContent(info)
+				.openOn(map)
+		})
+		.on('mouseout', function(e) {
+				var properties = e.layer.properties;
+				map.closePopup();
+		}).addTo(map);
+		
+		if (window.searchControl){
+			map.removeControl(window.searchControl);
+		}
+		console.log(data);
+		
+		//---------recherche----------------
+		var s_prisesEau = L.geoJSON(data); 
+		window.searchControl = new L.Control.Search({
+			layer: s_prisesEau,
+			propertyName: 'Nom',
+			initial: false,
+			textErr: 'Prise d eau non trouvée',	//error message
+			textCancel: 'Annuler',		    //title in cancel button
+			textPlaceholder: 'Rechercher une prise d eau...',
+			minLength: 0,					//minimal text length for autocomplete
+			casesensitive: false,			//search elements in case sensitive text
+			autoType: true,
+			firstTipSubmit: true,			//auto select first result con enter click
+			autoResize: true,
+			tooltipLimit: 10,
+			moveToLocation: function(latlng, title, map) {
+				//var zoom = map.getBoundsZoom(latlng.layer.getBounds());
+				map.setView(latlng);
+			}
+		});
+		map.fitBounds(s_prisesEau.getBounds());
+		map.addControl(window.searchControl);
+		
+		//-------------Légende-----------------------
+		var legend = L.control({position: 'bottomright'});
+		legend.onAdd = function (map) {
+
+			var div = L.DomUtil.create('div', 'info legend'),
+				couleurs = ['green', 'red', 'orange'],
+				valeurs = ['Autorisée', 'Non autorisée', 'Autre'],
+				labels = ['<strong>'+"Prise d'eau:"+'</strong>']
+
+				for (var i = 0; i < couleurs.length; i++) {
+					col = couleurs [i];
+					vf=valeurs [i];
+					labels.push(
+						'<i style="background:' + col + '"></i> ' + vf );
+				}
+				div.innerHTML = labels.join('<br>');
+					return div;
+		};
+		if (!(map.legenddisplay)) {
+			legend.addTo(map);
+			//console.log(map.legenddisplay)
+			map.legenddisplay = this;}
+		});
+			
+
+		L.control.scale({imperial: false}).addTo(map);
+		
+		//new L.Control.GeoSearch({
+		//  provider: new L.GeoSearch.Provider.OpenStreetMap(),
+		//    position: 'topleft',
+		//    showMarker: true,
+		//    retainZoomLevel: false,
+		//    }).addTo(map);
+		
+		//----------Localisation-----------------
+		var lc = L.control.locate({
+			position: 'topleft',
+			icon: "fa fa-location-arrow",
+			flyTo : true,
+			locateOptions: {
+				enableHighAccuracy: true,
+				maxZoom: 18,
+			},
+			strings: {
+				title: "Se localiser"
+			}
+		}).addTo(map);
+
+		//----------Objets de dessin-----------------
+		var optionspm = {
+			position: 'bottomleft', // toolbar position, options are 'topleft', 'topright', 'bottomleft', 'bottomright'
+			drawMarker: true, // adds button to draw markers
+			drawPolyline: true, // adds button to draw a polyline
+			drawRectangle: false, // adds button to draw a rectangle
+			drawPolygon: true, // adds button to draw a polygon
+			drawCircle: false, // adds button to draw a cricle
+			cutPolygon: false, // adds button to cut a hole in a polygon
+			editMode: true, // adds button to toggle edit mode for all layers
+			removalMode: true, // adds a button to remove layers
+		};
+
+		// add leaflet.pm controls to the map
+		map.pm.addControls(optionspm);
+
+			
+		// optional options for line style during draw. These are the defaults
+		var options = {
+			// snapping
+			snappable: true,
+			snapDistance: 60,
+
+			// self intersection
+			allowSelfIntersection: true,
+
+			// the lines between coordinates/markers
+			templineStyle: {
+				color: 'red',
+			},
+
+			// the line from the last marker to the mouse cursor
+			hintlineStyle: {
+				color: 'red',
+				dashArray: [5, 5],
+			},
+
+			// show a marker at the cursor
+			cursorMarker: false,
+
+			// finish drawing on double click
+			// DEPRECATED: use finishOn: 'dblclick' instead
+			finishOnDoubleClick: false,
+
+			// specify type of layer event to finish the drawn shape
+			// example events: 'mouseout', 'dblclick', 'contextmenu'
+			// List: http://leafletjs.com/reference-1.2.0.html#interactive-layer-click
+			finishOn: 'contextmenu',
+
+			// custom marker style (only for Marker draw)
+			markerStyle: {
+				opacity: 0.5,
+				draggable: true,
+			},
+		};
+
+		// enable drawing mode for shape - e.g. Poly, Line, etc
+		map.pm.enableDraw('Poly', options);
+		//map.pm.enableDraw('Rectangle', options);
+		map.pm.enableDraw('Line', options);
+		map.pm.enableDraw('Marker', options);
+		//map.pm.enableDraw('Circle', options);
+		map.pm.disableGlobalEditMode()
+				
+		function downloadURI(uri, name) {
+		  var link = document.createElement("a");
+		  link.download = name;
+		  link.href = uri;
+		  link.target="_blank";
+		  document.body.appendChild(link);
+		  link.click();
+		  document.body.removeChild(link);
+		  delete link;
+		  console.log(link);
+		}
+
+		function redirect(geom){
+		var timestamp = showTime();
+			//window.location.href = "mailto:dpi-daip-pfa-sig@edf.fr?subject=Nouvelle géométrie "+"("+timestamp+")"+"&body="+geom;
+			window.location.href = "mailto:pauline.gaubiac-challies@edf.fr?subject=Nouvelle géométrie "+"("+timestamp+")"+"&body="+geom;
+		}
+		
+		//-----------MsgBox-----------------
+		var autorisation;
+		var nom;
+		var	commentaire; 
+		
+		function CustomPrompt(){
+			this.render = function(dialog,func){
+				var winW = window.innerWidth;
+				var winH = window.innerHeight;
+				var dialogbox = document.getElementById('dialogbox');
+				
+				dialogoverlay.style.display = 'block';
+				dialogbox.style.display = 'block';
+				
+				dialogoverlay.style.display = "block";
+				dialogoverlay.style.height = winH+"px";				
+				
+				dialogbox.style.left = (winW/2) - (550 * .5)+"px";
+				dialogbox.style.top = "100px";
+				dialogbox.style.display = "block";
+			}
+		}
+		var Prompt = new CustomPrompt(); 
+		
+		function changemt(){
+			nom = document.getElementById("name").value;
+			commentaire = document.getElementById("obs").value;
+			autorisation=document.getElementById("auto").value;
+			return nom, commentaire, autorisation;
+		}
+		
+		function Submit() {
+			changemt();
+			document.getElementById('dialogbox').style.display = "none";
+			document.getElementById('dialogoverlay').style.display = "none";
+			document.getElementById("name").value = "";
+			document.getElementById("auto").value = "";
+			document.getElementById("obs").value = "";
+		}
+		
+		function Close(){
+			document.getElementById('dialogbox').style.display = "none";
+			document.getElementById('dialogoverlay').style.display = "none";
+			map.pm.disableDraw();
+		}
+		
+		//-------Création dessin---------------------
+		var i = 0;
+		const myLayerGroup = L.layerGroup([]);
+		
+		map.on('pm:drawstart', (e) => {
+			var box = Prompt.render("",'');
+			var layer = e.workingLayer;
+			var feature = e.layer.feature = e.layer.feature || {};
+				feature.type = "Feature";
+				feature.properties = feature.properties || {};
+				feature.properties["Nom"] = nom;
+				feature.properties["Autorisation"]=autorisation;
+				feature.properties["Commentaire"]=commentaire;
+				feature.properties["created"]=showTime();
+				feature.properties["id"]=i;
+				console.log(i);
+				console.log(e.shape)
+				if (e.shape==="Circle"){
+					var rad = e.layer.getRadius();
+					feature.properties["radius"] = rad;
+				}				
+			myLayerGroup.addLayer(e.layer);
+			
+			// console.log(nom);
+			// console.log(commentaire);
+			// console.log(autorisation);
+			
+			e.layer.bindTooltip("<span style='font-size:14px'><b>Prise d'eau : "+nom+"</b></br></br> Autorisée : "+autorisation+"</br> Observations : "+commentaire+"</span>");
+
+		});
+		map.on('pm:create', (e) => {			
+			i=i+1;
+			
+			var box = Prompt.render("",'');
+			var feature = e.layer.feature = e.layer.feature || {};
+				feature.type = "Feature";
+				feature.properties = feature.properties || {};
+				feature.properties["Nom"] = nom;
+				feature.properties["Autorisation"]=autorisation;
+				feature.properties["Commentaire"]=commentaire;
+				feature.properties["created"]=showTime();
+				feature.properties["id"]=i;
+				console.log(i);
+				console.log(e.shape)
+				if (e.shape==="Circle"){
+					var rad = e.layer.getRadius();
+					feature.properties["radius"] = rad;
+				}
+				
+			myLayerGroup.addLayer(e.layer);
+				
+			e.layer.bindTooltip("<span style='font-size:14px'><b>Prise d'eau : "+nom+"</b></br></br> Autorisée : "+autorisation+"</br> Observations : "+commentaire+"</span>");
+		});
+
+
+		// on click, clear all layers 
+		document.getElementById('delete').onclick = function(e) {
+			myLayerGroup.clearLayers();
+		}
+
+		document.getElementById('export').onclick = function(e) {
+			// Extract GeoJson from featureGroup 
+			var data_drawn = myLayerGroup.toGeoJSON();
+			//var data_drawn =map.pm.Draw.getShapes();
+			// Stringify the GeoJson 
+			var convertedData = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data_drawn));
+
+			<!-- // Create export -->
+			document.getElementById('export').setAttribute('href', 'data:' + convertedData);
+			document.getElementById('export').setAttribute('download','data.geojson'); 
+		} 
+			
+		function showTime() {
+			Date.prototype.toIsoString = function() {
+				var tzo = -this.getTimezoneOffset(),
+					dif = tzo >= 0 ? '+' : '-',
+					pad = function(num) {
+						var norm = Math.floor(Math.abs(num));
+						return (norm < 10 ? '0' : '') + norm;
+					};
+				return this.getFullYear() +
+					'-' + pad(this.getMonth() + 1) +
+					'-' + pad(this.getDate()) +
+					'T' + pad(this.getHours()) +
+					'-' + pad(this.getMinutes()) +
+					'-' + pad(this.getSeconds()) +
+					dif + pad(tzo / 60) +
+					'-' + pad(tzo % 60);
+			}
+
+			var dt = new Date();
+				return dt.toIsoString().substring(0, 19);
+		}
+
+		L.easyButton( 'fa fa-envelope-o', function(e){
+				
+			var data_drawn = myLayerGroup.toGeoJSON();
+				//var data_drawn =map.pm.Draw.getShapes();
+				// Stringify the GeoJson 
+				// Create export -->
+				
+				redirect(encodeURIComponent(JSON.stringify(data_drawn)));//downloadURI(convertedData, "Geom.geojson");
+				//document.getElementById('export').setAttribute('href', 'data:' + convertedData);
+				//document.getElementById('export').setAttribute('download','data.geojson'); 
+			},{position: 'bottomleft'}
+		).addTo(map);
+		
+		L.easyButton( 'fa-download', function(e){
+			
+			var data_drawn = myLayerGroup.toGeoJSON();
+			var timestamp=showTime().replace(':','_');
+			var convertedData = 'application/force-download;charset=utf-8,' + encodeURIComponent(JSON.stringify(data_drawn));
+			downloadURI('data:' + convertedData, "Geom"+timestamp+".geojson");
+		}).addTo(map);
+	  
+
+		</script>
+	</body>
+</html>
