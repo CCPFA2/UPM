@@ -9,7 +9,6 @@
     <link href='https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css' rel='stylesheet' />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" />
 	<script src="./src/leaflet.js"></script>
-	<script src="./src/Leaflet.VectorGrid.bundled.js"></script>
     <script src="./src/js/leaflet.filelayer.js"></script>
     <script src="./src/js/togeojson.js"></script>
     <script src="./src/js/leaflet.edgebuffer.js"></script>
@@ -140,16 +139,13 @@
 	
 		var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 21, maxNativeZoom: 19,
 			edgeBufferTiles: 2,
-			//useCache: false,
-			//crossOrigin: false,
 			detectRetina: false,
 			attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'});
 			
 		var osm_light  = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',opacity: 1,
 			maxZoom: 21, maxNativeZoom: 19, //useCache: true,
-			edgeBufferTiles: 2
-			//detectRetina: true,										  
-			});
+			edgeBufferTiles: 2										  
+		});
 			
 		var osm_dark  = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',opacity: 1,
 			maxZoom: 21, maxNativeZoom: 19, //useCache: true,
@@ -157,15 +153,10 @@
 		});
 
 		var Topo =  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {maxZoom: 18, maxNativeZoom: 17,
-			//edgeBufferTiles: 2,
-			//useCache: true,
 			detectRetina: true,
 			attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'});
 		
 		var carthage = L.tileLayer('https://a.tile.openstreetmap.fr/route500hydro/{z}/{x}/{y}.png', {maxZoom: 19,
-			//useCache: true,
-			//crossOrigin: false,
-			//edgeBufferTiles: 2,
 			detectRetina: false, zIndex: 8, attribution: '&copy; IGN, BD Carthage' });
 			
 		var baseMaps = {
@@ -186,20 +177,11 @@
 			layers: [osm_light]
 		});
 		
-		
 		var hash = new L.Hash(map);
 		L.control.layers(baseMaps,overlays).addTo(map);
 
-
-		var style = {color:'red', opacity: 1.0, fillOpacity: 0.1, weight: 2, clickable: true};
-		var geojsonMarkerOptions = {
-			  radius: 8,
-			  fillColor: "#ff7800",
-			  color: "#000",
-			  weight: 1,
-			  opacity: 1,
-			  fillOpacity: 0.8
-		};
+		// var style = {color:'red', opacity: 1.0, fillOpacity: 0.1, weight: 2, clickable: true};
+		
 
 		var w = window,
 			d = document,
@@ -211,18 +193,9 @@
 		popupwidth=Math.round(x/4)
 		popupheight=Math.round(y/3)
 		
-		var customOptions ={
-			'maxWidth': popupwidth.toString(),
-			'maxHeight': popupheight.toString(),
-			'className' : 'custom'
-		}
 		
-		var customOptionsF ={
-			'maxWidth': (popupwidth*1.5).toString(),
-			'maxHeight': popupheight.toString(),
-			'className' : 'custom'
-		}
 		
+		//---------Chargmeent du geojson----------------
 		L.Control.FileLayerLoad.LABEL = '<i class="fa fa-folder-open"></i>';// '⌘';
 		var control = new L.Control.fileLayerLoad({
 			fileSizeLimit: 256000,
@@ -233,50 +206,80 @@
 		data=JSON.parse(e.result);
 		
 		
-		//-------VG----------------
-		var vg_prisesEau = L.vectorGrid.slicer( data, {
-			rendererFactory: L.canvas.tile,
-			attribution: 'CC-PFA',
-			maxZoom: 22,
-			zIndex:150,			// max zoom to preserve detail on
-			tolerance: 5,		// simplification tolerance (higher means simpler)
-			extent: 1024, 		// tile extent (both width and height)
-			buffer: 64,   		// tile buffer on each side
-			debug: 0,      		// logging level (0 to disable, 1 or 2)
-			vectorTileLayerStyles: {
-			sliced: function(properties, zoom) {
-				var auto = properties["Autorisation"];
-				return {
-					fillColor: 	(auto === "oui"  )? 'green':
-								(auto === "non"  )? 'red' : 
-								(auto === "autre"  )? 'orange':'orange',
-					fillOpacity:0.7,
-					stroke: true,
-					fill: true,
-					color:  	(auto === "oui"  )? 'green':
-								(auto === "non"  )? 'red'  : 
-								(auto === "autre"  )? 'orange':'orange',
-							
-					opacity: 1,
-					weight: 1,
-				}
-			}},
-			interactive: true,
-			// getFeatureId: function(auto) {
-				// return auto.properties.Nom;
-			// }
-		})
-		.on('mouseover', function(e) {
-			var properties = e.layer.properties;
-			info = 	"<b>Prélèvement d'eau : "+properties.Nom+'</b><br />'+'Autorisation : '+properties.Autorisation+'<br />Observations : '+properties.Commentaire	
+		//---------------GeoJson----------------
+		function getColor(auto) {
+			return 	auto === "oui" ? 'green':
+					auto === "non" ? 'red' : 
+					auto === "autre" ? 'orange':'orange';
+		}
+		var geojsonCircleOptions = {
+			  radius: 8,
+			  color: "#000",
+			  weight: 1,
+			  opacity: 1,
+		};
+		function styleG(feature) {
+			return {
+				weight: 1,
+				color: getColor(feature.properties.Autorisation),
+				opacity:1,
+				fillColor: getColor(feature.properties.Autorisation),
+				fillOpacity: 0.5, 
+			};
+		}
+		//Surbrillance
+		function highlightFeature(e) {
+			var layer = e.target;
+			layer.setStyle({
+				color: 'deepskyblue',
+				fillColor: 'deepskyblue',
+			});
+			if (!L.Browser.ie && !L.Browser.opera) {
+				layer.bringToFront();
+			}
+		}
+		//Réinitialisation style
+		function resetHighlight(e) {
+			var layer = e.target;
+			layer.setStyle({
+				fillColor: getColor(layer.feature.properties.Autorisation),
+			});
+			if (!L.Browser.ie && !L.Browser.opera) {
+				layer.bringToBack();
+			}
+		}
+		
+		//taille pop-up
+		var customOptions ={
+			'maxWidth': popupwidth.toString(),
+			'maxHeight': popupheight.toString(),
+			'className' : 'custom'
+		}
+		//Pop_up
+		function OnClick(e) {
+			var properties=e.target.feature.properties;
+			var info = 	"<b>Prélèvement d'eau : "+properties.Nom+'</b><br />'+'Autorisation : '+properties.Autorisation+'<br />Observations : '+properties.Commentaire;
 			L.popup(customOptions)
 				.setLatLng(e.latlng)
 				.setContent(info)
 				.openOn(map)
-		})
-		.on('mouseout', function(e) {
-				var properties = e.layer.properties;
-				map.closePopup();
+		}
+
+		//Passage sur une zone
+		function onEachFeature(feature, layer) {
+			layer.on({
+				mouseover: highlightFeature,
+				mouseout: resetHighlight,
+				click: OnClick
+			});
+		}
+		
+		var prisesEau = new L.geoJson(data,{
+			onEachFeature: onEachFeature,
+			style:styleG,
+			pointToLayer: function (feature, latlng) {
+          			return new L.CircleMarker(latlng, geojsonCircleOptions);
+				}
 		}).addTo(map);
 		
 		if (window.searchControl){
