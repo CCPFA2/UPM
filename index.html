@@ -508,8 +508,10 @@
 					icon : myIcon
 				},
 			};	
-			map.pm.enableDraw('Marker', optionsMarker);
-			
+			if (e.shape==='Marker'){
+				map.pm.enableDraw('Marker', optionsMarker);	
+			}
+		
 			//modification des couleurs, sauf point
 			map.pm.setPathOptions({
 				fillColor: 	(autorisation === "oui") ? 'green':
