@@ -580,11 +580,7 @@
 		});
 		
 		map.on('pm:remove', function(e) {
-			if (e.shape==="Marker"){
-				alert('Suppression du marqueur')
-			}else{
-				alert('Suppression de la zone')
-			}
+			alert('Suppression de la zone');
 			myLayerGroup.clearLayers();
 			console.log(myLayerGroup);
 			
