@@ -581,13 +581,18 @@
 				
 			myLayerGroup.addLayer(e.layer);
 			e.layer.bindTooltip("<span style='font-size:14px'><b>Prélèvement d'eau : "+nom+"</b></br></br> Autorisé : "+autorisation+"</br> Observations : "+commentaire+"</span>");
+			
 		});
 		
 		map.on('pm:remove', function(e) {
-			alert('Suppression de la zone');
-			myLayerGroup.clearLayers();
-			console.log(myLayerGroup);
-			
+			myLayerGroup.eachLayer(function (f) {
+				if (f.feature.properties.id === e.layer.feature.properties.id) {
+					console.log(f.feature.properties.id);
+					console.log(e.layer.feature);
+					myLayerGroup.removeLayer(f);
+					alert('Vous venez de supprimer : ' + e.layer.feature.properties.Nom)
+				}
+			});
 		});
 		
 		
