@@ -550,30 +550,7 @@
 
 		map.on('pm:drawstart', (e) => {
 			document.getElementById("markerType").value = e.shape;
-			
-			
 			var box = Prompt.render("",'');
-				
-			// var layer = e.workingLayer;
-			// var feature = layer.feature = layer.feature || {};
-				// feature.type = "Feature";
-				// feature.properties = feature.properties || {};
-				// feature.properties["Nom"] = nom;
-				// feature.properties["Autorisation"]=autorisation;
-				// feature.properties["Commentaire"]=commentaire;
-				// feature.properties["created"]=showTime();
-				// feature.properties["id"]=i;
-				// console.log(i);
-				// console.log(e.shape);
-				
-				// console.log(myLayerGroup.feature[1]);
-				
-				// if (e.shape==="Circle"){
-					// var rad = layer.getRadius();
-					// feature.properties["radius"] = rad;
-				// }	
-			// myLayerGroup.addLayer(layer);
-			// layer.bindTooltip("<span style='font-size:14px'><b>Prélèvement d'eau : "+nom+"</b></br></br> Autorisé : "+autorisation+"</br> Observations : "+commentaire+"</span>");
 		});
 		
 		map.on('pm:create', (e) => {			
@@ -589,23 +566,29 @@
 				feature.properties["Commentaire"]=commentaire;
 				feature.properties["created"]=showTime();
 				feature.properties["id"]=i;
-				console.log(i);
-				console.log(e.shape)
+				
 				if (e.shape==="Circle"){
 					var rad = e.layer.getRadius();
 					feature.properties["radius"] = rad;
 				}
+				console.log(i);
+				console.log(e.shape);
 				console.log(e.layer.feature);
-
+				
 			myLayerGroup.addLayer(e.layer);
 			e.layer.bindTooltip("<span style='font-size:14px'><b>Prélèvement d'eau : "+nom+"</b></br></br> Autorisé : "+autorisation+"</br> Observations : "+commentaire+"</span>");
 		});
 		
-		// on click, clear all layers 
-		document.getElementById('delete').onclick = function(e) {
+		map.on('pm:remove', function(e) {
+			if (e.shape==="Marker"){
+				alert('Suppression du marqueur')
+			}else{
+				alert('Suppression de la zone')
+			}
 			myLayerGroup.clearLayers();
 			console.log(myLayerGroup);
-		}
+			
+		});
 		
 		
 		document.getElementById('export').onclick = function(e) {
