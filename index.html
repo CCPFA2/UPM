@@ -134,7 +134,20 @@
 		<a href='#' id='export'></a>	
 			
 		<script type="text/javascript">
-	
+		var CLE_IGN = "jcx786b3aad4khzcj6ld36a8";
+    	var url_ign_parcelaire ="https://gpp3-wxs.ign.fr/"+CLE_IGN+"/wmts?LAYER=CADASTRALPARCELS.PARCELS&EXCEPTIONS=text/xml&FORMAT=image/png&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE=bdparcellaire&TILEMATRIXSET=PM&&TILEMATRIX={z}&TILECOL={x}&TILEROW={y}";
+		var ign_parcelaire = L.tileLayer(url_ign_parcelaire, {maxZoom: 21, maxNativeZoom: 20,
+							   //edgeBufferTiles: 2,
+							  //useCache: true,
+							  //crossOrigin: false,
+							  minZoom:14,
+							  //detectRetina: true,
+							  zIndex: 7 ,attribution : '&copy; <a href="http://www.ign.fr/">IGN</a>'});
+   // var ign_parcelaire_o = L.tileLayer(url_ign_parcelaire_o, {maxZoom: 21, maxNativeZoom: 20,
+							  //useCache: true,
+							  //crossOrigin: false,
+//							  detectRetina: true, zIndex: 7 ,attribution : '&copy; <a href="http://www.ign.fr/">IGN</a>'});
+
 		var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 21, maxNativeZoom: 19,
 			edgeBufferTiles: 2,
 			detectRetina: false,
@@ -165,6 +178,7 @@
 		};
 
 		var overlays = {
+			"Parcelaire IGN":ign_parcelaire,
 			"Rivières": carthage
 		};
 
@@ -172,7 +186,7 @@
 			center: [46.5,2.34],
 			zoom: 9,
 			center: [43.8048,6.2787],
-			layers: [osm_light]
+			layers: [osm_light,ign_parcelaire ]
 		});
 		
 		var hash = new L.Hash(map);
@@ -195,137 +209,281 @@
 		}).addTo(map);
 		
 		control.loader.on('data:loaded', function (e) {
-		
-		data=JSON.parse(e.result);
-		
-		//---------------GeoJson----------------
-		function getColor(auto) {
-			return 	auto === "oui" ? 'green':
-					auto === "non" ? 'red' : 
-					auto === "autre" ? 'orange':'orange';
-		}
-		
-		var geojsonCircleOptions = {
-			  radius: 8,
-			  color: "#000",
-			  weight: 1,
-			  opacity: 1,
-		};
-		
-		function styleG(feature) {
-			return {
-				weight: 1,
-				color: getColor(feature.properties.Autorisation),
-				opacity:1,
-				fillColor: getColor(feature.properties.Autorisation),
-				fillOpacity: 0.5, 
-			};
-		}
-		//Surbrillance
-		function highlightFeature(e) {
-			var layer = e.target;
-			layer.setStyle({
-				color: 'deepskyblue',
-				fillColor: 'deepskyblue',
-			});
-			if (!L.Browser.ie && !L.Browser.opera) {
-				layer.bringToFront();
-			}
-		}
-		//Réinitialisation style
-		function resetHighlight(e) {
-			var layer = e.target;
-			layer.setStyle({
-				fillColor: getColor(layer.feature.properties.Autorisation),
-			});
-			if (!L.Browser.ie && !L.Browser.opera) {
-				layer.bringToBack();
-			}
-		}
-		
-		//taille pop-up
-		var customOptions ={
-			'maxWidth': popupwidth.toString(),
-			'maxHeight': popupheight.toString(),
-			'className' : 'custom'
-		}
-		//Pop_up
-		function OnClick(e) {
-			var properties=e.target.feature.properties;
-			var info = 	"<b>Prélèvement d'eau : "+properties.Nom+'</b><br />'+'Autorisation : '+properties.Autorisation+'<br />Observations : '+properties.Commentaire;
-			L.popup(customOptions)
-				.setLatLng(e.latlng)
-				.setContent(info)
-				.openOn(map)
-		}
-
-		//Passage sur une zone
-		function onEachFeature(feature, layer) {
-			layer.on({
-				mouseover: highlightFeature,
-				mouseout: resetHighlight,
-				click: OnClick
-			});
-		}
-		
-		var prisesEau = new L.geoJson(data,{
-			onEachFeature: onEachFeature,
-			style:styleG,
-			pointToLayer: function (feature, latlng) {
-          			return new L.CircleMarker(latlng, geojsonCircleOptions);
+			//Surbrillance
+			function highlightFeature(e) {
+				var layer = e.target;
+				layer.setStyle({
+					color: 'deepskyblue',
+					fillColor: 'deepskyblue',
+				});
+				if (!L.Browser.ie && !L.Browser.opera) {
+					layer.bringToFront();
 				}
-		}).addTo(map);
-		
-		if (window.searchControl){
-			map.removeControl(window.searchControl);
-		}
-		console.log(data);
-		
-		//---------recherche----------------
-		var s_prisesEau = L.geoJSON(data); 
-		window.searchControl = new L.Control.Search({
-			layer: s_prisesEau,
-			propertyName: 'Nom',
-			initial: false,
-			textErr: 'Prise d eau non trouvée',	//error message
-			textCancel: 'Annuler',		    //title in cancel button
-			textPlaceholder: 'Rechercher une prise d eau...',
-			minLength: 0,					//minimal text length for autocomplete
-			casesensitive: false,			//search elements in case sensitive text
-			autoType: true,
-			firstTipSubmit: true,			//auto select first result con enter click
-			autoResize: true,
-			tooltipLimit: 10,
-			moveToLocation: function(latlng, title, map) {
-				//var zoom = map.getBoundsZoom(latlng.layer.getBounds());
-				map.setView(latlng);
 			}
-		});
-		map.fitBounds(s_prisesEau.getBounds());
-		map.addControl(window.searchControl);
-		
-		//-------------Légende-----------------------
-		var legend = L.control({position: 'bottomright'});
-		legend.onAdd = function (map) {
+			
+			//Style data = parcelles
+			function styleP(feature) {
+				var p = feature.properties.PCM;
+				var nbPre = 0;
+				var d = feature.properties.prelevement;
+				
+				if (d === 'X'){
+					nbPre=nbPre+1;
+					//console.log(nbPre);
+					return {						
+						fillColor: 	(p === "P" ||p==="PF" )? '#008000' :
+									(p === "C"|| p === "CF")? '#ffa07a' :
+									(p === "M"|| p === "MF")? '#da70d6' :
+									(p === "E"|| p === "EF")? '#ffff00' :
+									(p ==="ZF"|| p==='Z')? '#ff0000' :'#666',
 
-			var div = L.DomUtil.create('div', 'info legend'),
-				couleurs = ['green', 'red', 'orange'],
-				valeurs = ['Autorisée', 'Non autorisée', 'Autre'],
-				labels = ['<strong>'+"Prise d'eau:"+'</strong>']
+						fillOpacity:	(p==='PF'||p ==='CF'||p ==='MF'||p ==='2F'||p==='P'||p ==='C'||p ==='M'||p ==='2') ? 0.5 :
+										(p ==="ZF"||p ==="EF"||p ==="E"||p ==="Z") ? 0.7 :0,
+						stroke: true,
+						fill: true,
+						dashArray: 6,		
+						color: 	'blue',
+						opacity: 1,
+						weight: 3,
+					};
+				}else{
+					return {
+						fillColor: 	(p === "P" ||p==="PF" )? '#008000' :
+									(p === "C"|| p === "CF")? '#ffa07a' :
+									(p === "M"|| p === "MF")? '#da70d6' :
+									(p === "E"|| p === "EF")? '#ffff00' :
+									(p ==="ZF"|| p==='Z')? '#ff0000' :'#666',
 
-				for (var i = 0; i < couleurs.length; i++) {
-					col = couleurs [i];
-					vf=valeurs [i];
-					labels.push(
+						fillOpacity:	(p==='PF'||p ==='CF'||p ==='MF'||p ==='2F'||p==='P'||p ==='C'||p ==='M'||p ==='2') ? 0.5 :
+										(p ==="ZF"||p ==="EF"||p ==="E"||p ==="Z") ? 0.7 :0,
+						stroke: true,
+						fill: true,
+						dashArray: 	(p==='EF'||p ==='ZF')||(p==='PF'||p ==='CF'||p ==='MF'||p ==='2F'||p ==='2AF')? '3':'0',
+								
+						color: 	(p==='EF'||p ==='ZF'||p==='Z')||(p==='PF'||p ==='CF'||p ==='MF'||p ==='2F')? '#ff0000':
+								(p ==='E')? '#ffff00':'#666',
+								
+						opacity: 1,
+						weight: 1,
+					};				
+				}
+				
+			}
+			
+			//Style data = geom
+			function getColorG(auto) {
+					return 	auto === "oui" ? 'green':
+							auto === "non" ? 'red' : 
+							auto === "autre" ? 'orange':'orange';
+			}
+			function styleG(feature) {
+					return {
+						weight: 1,
+						color: getColorG(feature.properties.Autorisation),
+						opacity:1,
+						fillColor: getColorG(feature.properties.Autorisation),
+						fillOpacity: 0.5, 
+					};
+			}
+			
+			//EachFeature
+			function onEachFeature(feature, layer) {
+					layer.on({
+						mouseover: highlightFeature,
+						mouseout: resetHighlight,
+						click: OnClick
+					});
+				}
+			
+			//taille pop-up
+			var customOptions ={
+				'maxWidth': popupwidth.toString(),
+				'maxHeight': popupheight.toString(),
+				'className' : 'custom'
+			}
+				
+			data=JSON.parse(e.result);
+			console.log(data);
+						
+			if ( typeof(data.features[1].properties.Autorisation) == 'undefined' ){
+				console.log('Parcelles');
+				
+				//Réinitialisation style - parcelle
+				function resetHighlight(e) {
+					var layer = e.target;
+					parcelles.resetStyle(layer);
+					if (!L.Browser.ie && !L.Browser.opera) {
+						layer.bringToBack();
+					}
+				}
+				//Pop_up - parcelles
+				function OnClick(e) {
+					var properties=e.target.feature.properties;
+					var info = 	properties.Description;
+					L.popup(customOptions)
+						.setLatLng(e.latlng)
+						.setContent(info)
+						.openOn(map)
+				}
+				
+				// Remplcmt texte
+				var j;
+				for (j=0 ;j < data.features.length; j++) {
+					var d = data.features[j].properties.Description;
+					d = d.replace(/[.*+?^${}()|[\]\\]/g, '')
+					d = d.replace(/[eéèêë]/g,"e");
+					d = d.replace(/[aàäâ]/g,"a");
+					d = d.replace(/[iîï]/g,"i");
+					d = d.replace(/[uùüû]/g,"u");
+					d = d.replace(/[oöô]/g,"o");
+					d = d.replace(/[OÖÖ]/g,"O");
+					d = d.replace(/[EÉÈÊË]/g,"E");
+					d = d.replace(/[AÀÂÄ]/g,"A");
+					d = d.replace(/[IÏÎ]/g,"I");
+					d = d.replace(/[UÙÜÛ]/g,"U");
+					// console.log(d);
+					var dUp = d.toUpperCase(d);
+					if (dUp.includes("SIFON") && dUp.includes("PRELEVEMENT")){
+						data.features[j].properties["prelevement"] = "X";
+					}
+				}
+								
+				var parcelles = new L.geoJson(data,{
+					style :styleP,
+					onEachFeature: onEachFeature,
+				}).addTo(map);
+				
+				if (window.searchControl){
+					map.removeControl(window.searchControl);
+				}
+				
+				//---------recherche---------------- 
+				window.searchControl = new L.Control.Search({
+					layer: parcelles,
+					propertyName: 'rec',
+					initial: false,
+					textErr: 'Parcelle non trouvée',	//error message
+					textCancel: 'Annuler',		    //title in cancel button
+					textPlaceholder: 'Rechercher une parcelle...',
+					minLength: 0,					//minimal text length for autocomplete
+					casesensitive: false,			//search elements in case sensitive text
+					autoType: true,
+					firstTipSubmit: false,			//auto select first result con enter click
+					autoResize: true,
+					autoCollapse: true,
+					tooltipLimit: 10,
+					moveToLocation: function(latlng, title, map) {
+						map.setView(latlng);
+					}
+				});
+				map.fitBounds(parcelles.getBounds());
+				map.addControl(window.searchControl);
+				
+				
+				var legend = L.control({position: 'bottomright'});
+				legend.onAdd = function (map) {
+					var div = L.DomUtil.create('div', 'info legend'),
+						couleurs = ['#008000', '#ffa07a', '#da70d6', '#666','#ffff00','#ff0000'],
+						valeurs = ['Privé', 'Concédé', 'Mixte', 'Tiers','Écart','Absence'],
+						labels = ['<strong>Légende parcellaire:</strong>']
+
+					for (var i = 0; i < couleurs.length; i++) {
+						col = couleurs [i];
+						vf=valeurs [i];
+						labels.push(
 						'<i style="background:' + col + '"></i> ' + vf );
+					}
+					div.innerHTML = labels.join('<br>');
+						return div;
+                };
+				if (!(map.legenddisplay)) {
+					legend.addTo(map);
+					map.legenddisplay = this;
 				}
-				div.innerHTML = labels.join('<br>');
-					return div;
-		};
-		if (!(map.legenddisplay)) {
-			legend.addTo(map);
-			//console.log(map.legenddisplay)
-			map.legenddisplay = this;}
+				
+			}else{
+				var geojsonCircleOptions = {
+					  radius: 8,
+					  color: "#000",
+					  weight: 1,
+					  opacity: 1,
+				};
+				
+				//Réinitialisation style - geom
+				function resetHighlight(e) {
+					var layer = e.target;
+					prisesEau.resetStyle(layer);
+					if (!L.Browser.ie && !L.Browser.opera) {
+						layer.bringToBack();
+					}
+				}
+				//Pop_up - geom
+				function OnClick(e) {
+					var properties=e.target.feature.properties;
+					var info = 	"<b>Prélèvement d'eau : "+properties.Nom+'</b><br />'+'Autorisation : '+properties.Autorisation+'<br />Observations : '+properties.Commentaire;
+					L.popup(customOptions)
+						.setLatLng(e.latlng)
+						.setContent(info)
+						.openOn(map)
+				}
+				
+				var prisesEau = new L.geoJson(data,{
+					onEachFeature: onEachFeature,
+					style:styleG,
+					pointToLayer: function (feature, latlng) {
+							return new L.CircleMarker(latlng, geojsonCircleOptions);
+					}
+				}).addTo(map);
+				
+				if (window.searchControl){
+					map.removeControl(window.searchControl);
+				}
+				
+				//---------recherche----------------
+				window.searchControl = new L.Control.Search({
+					layer: prisesEau,
+					propertyName: 'Nom',
+					initial: false,
+					textErr: 'Prise d eau non trouvée',	//error message
+					textCancel: 'Annuler',		    //title in cancel button
+					textPlaceholder: 'Rechercher une prise d eau...',
+					minLength: 0,					//minimal text length for autocomplete
+					casesensitive: false,			//search elements in case sensitive text
+					autoType: true,
+					firstTipSubmit: true,			//auto select first result con enter click
+					autoResize: true,
+					tooltipLimit: 10,
+					moveToLocation: function(latlng, title, map) {
+						//var zoom = map.getBoundsZoom(latlng.layer.getBounds());
+						map.setView(latlng);
+					}
+				});
+				map.fitBounds(prisesEau.getBounds());
+				map.addControl(window.searchControl);
+				
+				//-------------Légende-----------------------
+				var legend = L.control({position: 'bottomright'});
+				legend.onAdd = function (map) {
+
+					var div = L.DomUtil.create('div', 'info legend'),
+						couleurs = ['green', 'red', 'orange'],
+						valeurs = ['Autorisée', 'Non autorisée', 'Autre'],
+						labels = ['<strong>'+"Prise d'eau:"+'</strong>']
+
+						for (var i = 0; i < couleurs.length; i++) {
+							col = couleurs [i];
+							vf=valeurs [i];
+							labels.push(
+								'<i style="background:' + col + '"></i> ' + vf );
+						}
+						div.innerHTML = labels.join('<br>');
+							return div;
+				};
+				if (!(map.legenddisplay)) {
+					legend.addTo(map);
+					//console.log(map.legenddisplay)
+					map.legenddisplay = this;}
+			}
 		});
 
 		L.control.scale({imperial: false}).addTo(map);
@@ -595,7 +753,6 @@
 			});
 		});
 		
-		
 		document.getElementById('export').onclick = function(e) {
 			// Extract GeoJson from featureGroup 
 			var data_drawn = myLayerGroup.toGeoJSON();
@@ -642,7 +799,6 @@
 			},
 			'Envoyer',
 			{position: 'bottomleft'},
-			
 		).addTo(map);
 		
 		L.easyButton( 'fa-download', function(e){
@@ -654,6 +810,21 @@
 			},
 			'Enregistrer',
 		).addTo(map);
+		
+		
+		map.on('zoomend',function(e){
+			console.log(map.getZoom())
+			var zoomlev=map.getZoom();
+			if (zoomlev<14){
+				 osm.setOpacity(1);
+				 Topo.setOpacity(1);}
+		 
+			else if (map.hasLayer(ign_parcelaire)){
+				 osm.setOpacity(0.5);
+				 Topo.setOpacity(0.5);
+			}
+			
+	 });
 		</script>
 	</body>
 </html>
